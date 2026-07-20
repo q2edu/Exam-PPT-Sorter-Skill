@@ -1,0 +1,4 @@
+interface:
+  display_name: "Exam PPT Sorter"
+  short_description: "Clean, relabel, renumber, pack, and QA exam PPTs."
+  default_prompt: "Use $exam-ppt-sorter to clean, relabel, renumber, sort, pack, and validate this exam-question PowerPoint without changing printed question content."
