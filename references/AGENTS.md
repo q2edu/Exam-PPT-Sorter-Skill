@@ -1,69 +1,65 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
+## Scope and Source Roles
 
-This repository contains Python pipelines and generated exam-question artifacts. Keep the main scripts at the repository root:
+Apply the active project's `AGENTS.md`, repository conventions, and user instructions first. Do not assume a fixed grade, form, year, subject, curriculum, language, chapter count, question count, or pipeline name.
 
-- `sort_f3_pipeline.py`: extracts, classifies, builds, and validates the F3 deck.
-- `sort_f123_pipeline.py`: classifies and builds the combined F1/F2/F3 deck from existing OCR data.
-- `work/sort_f3_classification/`: intermediate JSON, OCR output, extracted question blocks, and rendered block images.
-- Root-level `.pptx`, `.pdf`, and `.csv` files are source inputs or generated deliverables. Use descriptive output names that preserve the source deck and sorting rule.
+Before editing, record a role ledger under `work/` with:
 
-Avoid editing `_archive_previous_outputs_20260713/` unless intentionally recovering an old artifact.
+- `CONTENT_SOURCE`: the only source of question content and identity
+- `LAYOUT_REFERENCE`: read-only visual geometry and styling
+- `LABEL_REFERENCE`: optional identity-matched label corrections
+- `CONTENT_SCOPE`: grade/form/year, subject, curriculum or syllabus, language, and grouping axis
+- `OUTPUT`: a new descriptive path
 
-## Build, Test, and Development Commands
+Reject a role assignment that conflicts with inspected grade/form markers, subject names, section titles, representative OCR, counts, or hashes.
 
-Run commands from the repository root.
+## Project Structure
 
-```powershell
-python sort_f3_pipeline.py extract
-python sort_f3_pipeline.py classify
-python sort_f3_pipeline.py build
-python sort_f3_pipeline.py validate
+Keep maintained project pipelines where the repository already places them. Put generated intermediates under `work/`, grouped by task. Keep source PPTX/PDF/CSV files unchanged. Put the selected final deliverable in the user-requested location or the project root when that matches the repository convention.
+
+Use descriptive output names containing the applicable grade/form/year, subject, source deck, and requested operation. Do not use an output name that implies another grade or subject.
+
+## Build and Validation Commands
+
+Discover existing commands from the active project instead of assuming a pipeline name copied from another grade, subject, or prior task. Prefer the project's phase commands when available:
+
+```text
+extract -> classify -> build -> validate
 ```
 
-These steps extract question images, classify them by chapter/type, build the packed PowerPoint, then verify picture counts, labels, bounds, and overlaps.
+Run the project validation command after changing extraction, classification, layout, labels, numbering, crop logic, or output paths. If no validator exists, perform equivalent count, identity, geometry, ZIP, render, and visual checks.
 
-```powershell
-python sort_f123_pipeline.py classify
-python sort_f123_pipeline.py build
-python sort_f123_pipeline.py validate
-```
+## Implementation Style
 
-Use this flow for the combined F1/F2/F3 output after OCR data exists in `work/sort_f3_classification/question-ocr.json`.
+Use explicit constants for paths, page dimensions, curriculum maps, grouping rules, and output names. Prefer clear functions such as `audit_sources`, `extract`, `classify`, `build`, `validate`, and `add_question`.
 
-Required Python packages include `Pillow` and `python-pptx`.
+Never hardcode one grade's chapter map, MCQ ranges, subject vocabulary, or expected counts as a universal default. Store scope-specific values in task configuration or manifests.
 
-## Coding Style & Naming Conventions
+## Question Identity and Reference Isolation
 
-Use Python 3, 4-space indentation, and standard-library types where practical. Keep constants near the top of each pipeline (`ROOT`, `WORK`, output paths, slide dimensions, chapter maps). Prefer explicit function names such as `classify`, `build`, `validate`, `add_question`, and `question_size`.
+Build the canonical question manifest only from `CONTENT_SOURCE`. Match questions through exact hashes, PPTX relationship/media identity, stable question IDs, or reviewed OCR/perceptual evidence. Never transfer content or labels by slide number after repacking.
 
-For generated files, use source-aware names like `sort f3 new_by_chapter_all_questions_packed_label_bands.pptx`. For intermediate JSON, use lowercase hyphenated names under `work/sort_f3_classification/`.
+After export, reconcile every output question and embedded question image against the content manifest. Assert that no question-media hash from `LAYOUT_REFERENCE` appears unless it is an explicitly whitelisted decorative asset.
 
-## Testing Guidelines
+## AI Cleanup of Question Images
 
-There is no separate unit-test suite. Treat each pipeline's `validate` command as the required regression check after changing layout, classification, or output paths. For classification changes, inspect the generated CSV (`question-classification-*.csv`) for obvious chapter drift before rebuilding final decks.
+Use deterministic pixel-local cleanup when safe. For semantic image editing, inspect a pilot first and preserve every printed word, number, formula, diagram, option, subpart, line break, language, and answer space.
 
-## AI Cleanup of Question Images in PPTX
+For each accepted edit, record the source image, target image, media filename, relationship or stable question ID, dimensions, crop, and before/after hashes. Reject changes that invent or alter printed content.
 
-Use this workflow when a question-bank PPTX contains raster question images with handwritten answers, pen circles, ticks, annotations, or light scan noise that need to be cleaned and put back in their original positions.
+## Packed Layout
 
-- Preserve the source deck. Export a distinct, descriptively named PPTX for every cleanup attempt, and keep extracted and generated image assets under `work/`.
-- Prefer the built-in image editing tool with the user's current account. It does not need an API key. For a local image, first inspect it with `view_image` so it is available as the edit target. If this bridge fails under a restricted sandbox, full local-file access may be required; confirm this with one image before attempting a batch.
-- The built-in image editing path does not expose a model selector. Do not claim that it used `gpt-image-2`; use the API/CLI path only when the user explicitly chooses it and has configured an API key.
-- For more than a few images, start with a pilot slide or 1-2 representative question images. Select a slide the user has not already manually cleaned, so the before/after result is meaningful.
-- A single slide can reference multiple image files. Inspect `ppt/slides/_rels/slideN.xml.rels` (or the extraction manifest) to identify every `ppt/media/image*.png` resource used on the target slide. Replace all intended resources together, while leaving all other media unchanged.
-- Use a tightly constrained edit prompt: remove only handwritten marks and insignificant scan noise; preserve every printed word, number, formula, diagram, option label, line break, page layout, and aspect ratio; forbid new text, translation, re-typesetting, cropping, and decorative effects.
-- Treat generated output as non-deterministic. It can remove handwriting and visibly improve readability, but may re-render printed text, fonts, or spacing even with strict instructions. Do not assume pixel-level or character-level fidelity. A human must inspect each pilot result before approving a larger batch.
-- Copy selected generated images into a workspace edit folder using the original PPTX media filenames (for example, `image89.png`). Replace the matching `ppt/media/...` files in a copied PPTX so the slide XML relationships, placements, and sizes remain unchanged.
-- Verify every output before delivery: the PPTX ZIP has no errors, the slide count is unchanged, the target slide's relationships still point to the intended media files, and PowerPoint can export/render the changed slide for a visual check. Inspect the rendered slide at full size for handwriting remnants, missing content, changed symbols, spelling, formulas, diagrams, and unintended cropping.
+Use the requested page size and grouping scheme. Treat a section as a chapter, unit, topic, domain, paper part, or another user-selected grouping. Reset numbering only at configured boundaries.
 
-## Commit & Pull Request Guidelines
+Measure the user's reference to determine whether labels align to a fixed page-right guide or each question image's right edge. Record and validate the chosen anchor mode.
 
-This directory currently has no local Git history, so use clear, conventional commit messages such as `fix: prevent label overlap in packed slides` or `data: update F3 classification csv`.
+When trimming outer white borders, crop exact pixels and scale the PowerPoint frame by the crop ratios so the printed text keeps its physical size.
 
-Pull requests should include a short summary, affected source files, commands run, and validation results. Attach or link screenshots/PDF previews when slide layout changes.
+## Multi-Agent Work
 
-## Agent-Specific Instructions
+When delegation is permitted, partition work by non-overlapping question/media IDs or complete section/page ranges. Workers write separate batch assets and result manifests, never the same PPTX or shared JSON. One integrator owns the canonical manifest and final deck; a separate supervisor verifies scope, counts, hashes, geometry, and rendered pages.
 
-Preserve source PDFs/PPTX files unless the user explicitly asks to replace them. Write new outputs with distinct names, and keep generated intermediates inside `work/`.
+## Delivery
+
+Deliver a distinct final PPTX and a concise QA summary naming the content source, layout reference, content scope, question/slide/section counts, identity method, unresolved items, and validation result. Never overwrite or delete a user source merely to tidy the folder.
