@@ -5,6 +5,14 @@ description: Clean, identify, relabel, renumber, sort, rebuild, pack, and valida
 
 # Exam PPT Sorter
 
+## Bundled Repository Rules
+
+At the start of every task using this skill, read [references/AGENTS.md](references/AGENTS.md) in full and apply it as the default repository and delivery policy. Also read any `AGENTS.md` found in the active project. Follow system, developer, user, and active-project instructions when they are more specific or conflict with the bundled defaults.
+
+## Bundled Visual Reference
+
+Inspect [assets/f2-sorted-clean-layout-reference.pptx](assets/f2-sorted-clean-layout-reference.pptx) when building or repairing a sorted student deck. Use it as the visual reference for compact chapter headers, question numbers placed close to their question content, upright and normally proportioned question text, preserved image sizing, and lower-right source-label placement. Treat it as a layout example only: do not use its question content as classification truth, do not overwrite it, and follow the user's current inputs and explicit layout instructions when they differ.
+
 ## Outcome
 
 Produce a student-ready exam-question PPTX while preserving all printed question content. Keep the source deck unchanged, retain the identity and source label of every question, and prove completeness with automated and visual QA before delivery.
